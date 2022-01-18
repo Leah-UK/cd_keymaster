@@ -66,24 +66,13 @@ function showKeymaster(){
         $("#keymaster-score").html("0");
         $("#keymaster-timer").html("0s");
         $("#keymaster-field").fadeIn(500, () => {
-            let countdown = 5;
-            $("#keymaster-overlay").show(0);
-            let cd = window.setInterval(() => {
-                if(countdown == -1){
-                    clearInterval(cd);
-                    $("#keymaster-overlay").hide(0);
-                    resolve(true);
-                } else if(countdown == 0){
-                    $("#keymaster-countdown").html("START");
-                    countdown--;
-                } else $("#keymaster-countdown").html(countdown--);
-                
-            }, 1000);
+            resolve(true);
         })
     });
     return promise;
 }
 function startGame(){
+	mistake = 0
     showKeymaster().then(()=>{
         moveKey();
         drawKeys();
@@ -94,6 +83,7 @@ function generateKeys(keylist){
     if(keylist.length > 0){
         keys = [];
         for(let i = 0; i < keylist.length; i++){
+			// r = Math.floor(Math.random()*keylist.length),
             keys.push({
                 key:keylist[i],
                 right:-128,
@@ -105,41 +95,46 @@ function generateKeys(keylist){
 function endGame(status, message){
     clearInterval(game);
     settings.speed = settings.baseSpeed;
-    
     mistake = 0;
-    
     if(status)
         gameSuccess = true;
     else gameSuccess = false;
     
     $("#keymaster-field").fadeOut(500);
-    if(settings.handleEnd){
-        openModal(((status)?"Completed!":"Failed!"), message);
-    } else {
-        var xhr = new XMLHttpRequest();
-        let u = "fail";
-        if(status)
-            u = "success";
-        xhr.open("POST", `http://cd_keymaster/${u}`, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({}));
-    }
+    // if(settings.handleEnd){
+    //     openModal(((status)?"Completed!":"Failed!"), message);
+    // } else {
+    //     var xhr = new XMLHttpRequest();
+    //     let u = "fail";
+    //     if(status)
+    //         u = "success";
+    //     xhr.open("POST", `http://cd_keymaster/${u}`, true);
+    //     xhr.setRequestHeader('Content-Type', 'application/json');
+    //     xhr.send(JSON.stringify({}));
+    // }
+    var xhr = new XMLHttpRequest();
+    let u = "fail";
+    if(status)
+        u = "success";
+    xhr.open("POST", `http://cd_keymaster/${u}`, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify({}));
 }
 async function nextKey(i){
     if(i >= keys.length)
         i = 0;
     $("#keymaster-point-char").html(keys[i].key);
     keys[i].shown = true;
-    $(`[data-kid='${i}']`).css("right", "-128px").css("background-color", "#eee").show(200);
+    $(`[data-kid='${i}']`).css("right", "-128px").css("background-color", "rgba(0,0,0,0.5)").show(200);
     keys[i].right = -128;
 }
 async function evalStatus(){
     if(score >= settings.scoreWin){
-        endGame(true, "Win");
+        endGame(true, "Success");
         return;
     } 
     if(score <= settings.scoreLose){
-        endGame(false, "You went into the negative!");
+        endGame(false, "You Fail!");
         return;
     } 
     if(mistake > settings.maxMistake){
